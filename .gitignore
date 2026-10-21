@@ -3,7 +3,7 @@ node_modules
 out
 dist
 data
-storage
+/storage
 .env
 .env.local
 .env*.local

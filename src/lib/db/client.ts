@@ -1,26 +1,18 @@
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { createClient, type Client, type InValue } from "@libsql/client";
-import { AppError } from "@/lib/errors";
+import { assertRemoteDatabaseConfigured, databaseAuthToken, databaseUrl } from "@/lib/db/client-config";
+
+export { databaseUrl, tursoEnvStatus } from "@/lib/db/client-config";
 
 let client: Client | null = null;
 let clientUrl: string | null = null;
 let migrating: Promise<void> | null = null;
 let foreignKeysOn = false;
 
-export function databaseUrl() {
-  return process.env.TURSO_DATABASE_URL?.trim() || "file:data/contentpilot.db";
-}
-
 export function getDb() {
+  assertRemoteDatabaseConfigured();
   const url = databaseUrl();
-  if (process.env.VERCEL && url.startsWith("file:")) {
-    throw new AppError(
-      "На Vercel нужна облачная база Turso: задайте TURSO_DATABASE_URL и TURSO_AUTH_TOKEN в переменных окружения.",
-      503,
-      "DB_MISCONFIGURED",
-    );
-  }
   if (client && clientUrl === url) return client;
   if (url.startsWith("file:")) {
     const filePath = url.slice("file:".length);
@@ -30,7 +22,7 @@ export function getDb() {
   client?.close();
   client = createClient({
     url,
-    authToken: process.env.TURSO_AUTH_TOKEN?.trim() || undefined,
+    authToken: databaseAuthToken(),
   });
   clientUrl = url;
   foreignKeysOn = false;

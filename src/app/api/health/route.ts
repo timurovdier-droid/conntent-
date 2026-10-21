@@ -1,15 +1,8 @@
 import { blobConfigured, geminiConfigured } from "@/lib/config";
-import { databaseUrl, readyDb } from "@/lib/db/client";
+import { readyDb, tursoEnvStatus } from "@/lib/db/client";
 import { json } from "@/lib/http";
 
 export const runtime = "nodejs";
-
-function databaseMode() {
-  const url = databaseUrl();
-  if (url.startsWith("libsql:")) return "turso";
-  if (url.startsWith("file:")) return "local";
-  return "unknown";
-}
 
 export async function GET() {
   try {
@@ -26,15 +19,16 @@ export async function GET() {
       db = false;
       dbError = error instanceof Error ? error.message : "database_unavailable";
     }
-    const mode = databaseMode();
+    const turso = tursoEnvStatus();
     const onVercel = Boolean(process.env.VERCEL);
     const authSecret = process.env.AUTH_SECRET?.trim() ?? "";
     return json({
-      ok: db && migrated && (mode !== "local" || !onVercel) && authSecret.length >= 16 && geminiConfigured(),
+      ok: db && migrated && (turso.mode === "turso" || !onVercel) && authSecret.length >= 16 && geminiConfigured(),
       db,
       migrated,
-      databaseMode: mode,
-      tursoTokenConfigured: Boolean(process.env.TURSO_AUTH_TOKEN?.trim()),
+      databaseMode: turso.mode,
+      tursoUrlConfigured: turso.urlConfigured,
+      tursoTokenConfigured: turso.tokenConfigured,
       onVercel,
       authSecretConfigured: authSecret.length >= 16,
       aiConfigured: geminiConfigured(),

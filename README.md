@@ -16,6 +16,18 @@ npm run dev
 
 `ADMIN_EMAILS` — список адресов через запятую. Они получают доступ к сводке и квотам при регистрации.
 
+## Деплой на Vercel + Turso
+
+1. В [Turso](https://turso.tech) создайте базу или подключите **Turso Cloud** к проекту Vercel через Marketplace.
+2. В Vercel → проект → **Settings → Environment Variables** для **Production** (и Preview при необходимости):
+   - `TURSO_DATABASE_URL` — строка вида `libsql://…`
+   - `TURSO_AUTH_TOKEN` — токен базы
+   - `AUTH_SECRET` — случайная строка от 16 символов
+   - `GEMINI_API_KEY` — ключ Google AI
+   - `NEXT_PUBLIC_APP_URL` — URL сайта, например `https://conntent.vercel.app`
+3. **Deployments → Redeploy** (переменные не подхватываются без пересборки).
+4. Проверка: `GET /api/health` — `databaseMode: "turso"`, `ok: true`.
+
 ## Решения, которые спецификация оставляла открытыми
 
 - Вход по email и паролю, сессия в httpOnly-cookie. Отдельный auth-сервис не требуется, данные лежат в той же базе.

@@ -12,3 +12,6 @@ data
 .vercel
 tsconfig.tsbuildinfo
 coverage
+
+.vercel
+.env*

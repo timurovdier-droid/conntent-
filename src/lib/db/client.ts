@@ -1,6 +1,7 @@
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { createClient, type Client, type InValue } from "@libsql/client";
+import { AppError } from "@/lib/errors";
 
 let client: Client | null = null;
 let clientUrl: string | null = null;
@@ -13,6 +14,13 @@ export function databaseUrl() {
 
 export function getDb() {
   const url = databaseUrl();
+  if (process.env.VERCEL && url.startsWith("file:")) {
+    throw new AppError(
+      "На Vercel нужна облачная база Turso: задайте TURSO_DATABASE_URL и TURSO_AUTH_TOKEN в переменных окружения.",
+      503,
+      "DB_MISCONFIGURED",
+    );
+  }
   if (client && clientUrl === url) return client;
   if (url.startsWith("file:")) {
     const filePath = url.slice("file:".length);

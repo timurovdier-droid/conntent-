@@ -1,3 +1,5 @@
+import { AppError } from "@/lib/errors";
+
 const encoder = new TextEncoder();
 
 export const SESSION_COOKIE = "cp_session";
@@ -12,7 +14,7 @@ function secret() {
   const value = process.env.AUTH_SECRET?.trim();
   if (value && value.length >= 16) return value;
   if (process.env.NODE_ENV === "production") {
-    throw new Error("AUTH_SECRET is required");
+    throw new AppError("На сервере не задан AUTH_SECRET (минимум 16 символов).", 503, "AUTH_MISCONFIGURED");
   }
   return "dev-only-contentpilot-secret-change-me";
 }
